@@ -2,6 +2,7 @@ package passgenerator
 
 import (
 	"flag"
+	"fmt"
 	"math/rand"
 	"time"
 	"unsafe"
@@ -22,28 +23,32 @@ var (
 var (
 	set    = flag.String("s", "1aA", "kinds of letter make up password")
 	length = flag.Int("l", 16, "length of password")
+	name   = flag.String("name", "", "the username of password")
+	get    = flag.String("get", "", "get password")
 )
+
+var generator passGenerator
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 	flag.Parse()
+	initGenerator()
 }
 
-func initGenerator() *passGenerator {
-	var passGen passGenerator
+func initGenerator() {
 	for _, val := range *set {
 		switch {
 		case val >= '0' && val <= '9':
-			passGen.container = append(passGen.container, digit)
+			generator.container = append(generator.container, digit)
 		case val >= 'a' && val <= 'z':
-			passGen.container = append(passGen.container, lower)
+			generator.container = append(generator.container, lower)
 		case val >= 'A' && val <= 'Z':
-			passGen.container = append(passGen.container, upper)
+			generator.container = append(generator.container, upper)
 		}
 	}
-	passGen.length = *length
-	passGen.password = make([]byte, *length, *length)
-	return &passGen
+	generator.length = *length
+	generator.password = make([]byte, *length, *length)
+	return
 }
 
 func (g *passGenerator) sum() *passGenerator {
@@ -58,6 +63,29 @@ func (g *passGenerator) dump() string {
 	return *(*string)(unsafe.Pointer(&g.password))
 }
 
-func Dump() string {
-	return initGenerator().sum().dump()
+// Dump dump the password
+func dump() string {
+	pwd := generator.sum().dump()
+	user[*name] = pwd
+	return pwd
+}
+
+// Run run app
+func Run() {
+	if len(*name) > 0 && len(*get) > 0 {
+		fmt.Println("You may specify one and only on of '-name', or '-get' option")
+		return
+	}
+
+	if len(*name) > 0 {
+		dump()
+		write()
+		return
+	}
+
+	if len(*get) > 0 {
+		fmt.Println(find(*get))
+		return
+	}
+	fmt.Println("You may specify one and only on of '-name', or '-get' option")
 }
