@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+const defaultFile = "data"
+
 type storage interface {
 	read()
 	write()
@@ -21,7 +23,7 @@ func init() {
 }
 
 func read() {
-	data, err := ioutil.ReadFile("data.json")
+	data, err := ioutil.ReadFile(defaultFile)
 	if err != nil {
 		if err.Error()[:4] != "open" {
 			panic(err)
@@ -40,7 +42,7 @@ func write() {
 		panic(err)
 	}
 	data = encrypt(data)
-	err = ioutil.WriteFile("data.json", data, os.ModeAppend)
+	err = ioutil.WriteFile(defaultFile, data, os.ModeAppend)
 	if err != nil {
 		panic(err)
 	}
@@ -51,4 +53,8 @@ func find(name string) string {
 		return pwd
 	}
 	return fmt.Sprintln("password for", name, "not found")
+}
+
+func remove(name string) {
+	delete(user, name)
 }

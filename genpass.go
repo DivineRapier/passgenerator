@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
+	"os"
+	"strings"
 	"time"
 	"unsafe"
 )
@@ -26,6 +28,8 @@ var (
 	length = flag.Int("length", 16, "length of password")
 	name   = flag.String("name", "", "the username of password")
 	get    = flag.String("get", "", "get password")
+	add    = flag.String("add", "", "add password with username")
+	rm     = flag.String("remove", "", "remove password by username")
 )
 
 var generator passGenerator
@@ -81,18 +85,23 @@ func Run() {
 		return
 	}
 
-	if len(*name) > 0 {
+	switch {
+	case *list:
+		show()
+	case len(*rm) > 0:
+		remove(*rm)
+		write()
+	case len(*add) > 0:
+		addPassword()
+		write()
+	case len(*name) > 0:
 		dump()
 		write()
-		return
-	}
-
-	if len(*get) > 0 {
+	case len(*get) > 0:
 		fmt.Println(find(*get))
-		return
+	default:
+		dump()
 	}
-	// fmt.Println("You may specify one and only on of '-name', or '-get' option")
-	dump()
 }
 
 func help() {
@@ -104,10 +113,26 @@ Usage:
 
 The options are:
 
-	kind			The password contains an instance of some kind of character
-	length			The length of the password
-	name 			Set the password for the specified account
-	get 			Get the password for the specified account
+	kind            The password contains an instance of some kind of character
+	length          The length of the password
+	name            Set the password for the specified account
+	get             Get the password for the specified account
+	list            List all passwords
+	remove          Remove password by username
+	add             Add pair of username and password (user:password)
 `,
 	)
+}
+
+func addPassword() {
+	index := strings.IndexByte(*add, ':')
+	if index <= 0 || index == len(*add)-1 {
+		fmt.Println("Error: invalid format. eg user:password")
+		os.Exit(-1)
+	}
+
+	username := (*add)[:index]
+	password := (*add)[index+1:]
+
+	user[username] = password
 }
